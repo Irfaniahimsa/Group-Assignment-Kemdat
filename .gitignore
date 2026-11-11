@@ -1,0 +1,23 @@
+# RSA keys 
+keys/
+*.pem
+
+# Environment / secret
+.env
+.env.*
+
+# Binary hasil build
+/bin/
+*.exe
+main
+
+# Folder IDE / editor
+.vscode/
+.idea/
+
+# File sistem
+.DS_Store
+Thumbs.db
+
+# Data volume Docker 
+pgdata/
