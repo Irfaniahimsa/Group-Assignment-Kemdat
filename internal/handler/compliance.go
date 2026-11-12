@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"aaa_bekend/internal/db"
 	"aaa_bekend/internal/lmodel"
 	"encoding/json"
 	"net/http"
@@ -10,8 +11,7 @@ import (
 func GetMyData(w http.ResponseWriter, r *http.Request) {
 	user, _ := lmodel.UserFromContext(r.Context())
 
-	// TODO: Ambil data profil user berdasarkan user.ID dari database
-	profile, err := lmodel.GetUserByID(user.ID)
+	profile, err := db.GetUserByID(r.Context(), user.ID)
 	if err != nil {
 		http.Error(w, "Failed to fetch user data", http.StatusInternalServerError)
 		return
@@ -24,19 +24,15 @@ func GetMyData(w http.ResponseWriter, r *http.Request) {
 func UpdateMyData(w http.ResponseWriter, r *http.Request) {
 	user, _ := lmodel.UserFromContext(r.Context())
 
-	// TODO: Tangkap input JSON dari request body
 	var req struct {
 		Username string `json:"username"`
-		Email    string `json:"email"`
-		// Tambahkan field lain jika diperlukan sesuai struct model user kalian
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	// TODO: Update data user ke database berdasarkan user.ID
-	if err := lmodel.UpdateUser(user.ID, req.Username, req.Email); err != nil {
+	if err := db.UpdateMyData(r.Context(), user.ID, req.Username); err != nil {
 		http.Error(w, "Failed to update user data", http.StatusInternalServerError)
 		return
 	}
@@ -51,8 +47,7 @@ func UpdateMyData(w http.ResponseWriter, r *http.Request) {
 func GetMyAuditLog(w http.ResponseWriter, r *http.Request) {
 	user, _ := lmodel.UserFromContext(r.Context())
 
-	// TODO: Ambil riwayat audit log khusus milik user tersebut dari database
-	logs, err := lmodel.GetAuditLogsByUserID(user.ID) // Atau berdasarkan user.Username tergantung skema
+	logs, err := db.GetUserAuditLogs(r.Context(), user.ID)
 	if err != nil {
 		http.Error(w, "Failed to fetch audit logs", http.StatusInternalServerError)
 		return
@@ -69,10 +64,9 @@ func GetMyAuditLog(w http.ResponseWriter, r *http.Request) {
 func ExportMyData(w http.ResponseWriter, r *http.Request) {
 	user, _ := lmodel.UserFromContext(r.Context())
 
-	// TODO: Ambil profil, proyek, dan audit log user untuk portabilitas data UU PDP
-	profile, _ := lmodel.GetUserByID(user.ID)
-	projects, _ := lmodel.GetProjectsByUserID(user.ID)
-	logs, _ := lmodel.GetAuditLogsByUserID(user.ID)
+	profile, _ := db.GetUserByID(r.Context(), user.ID)
+	projects, _ := db.GetUserProjects(r.Context(), user.ID)
+	logs, _ := db.GetUserAuditLogs(r.Context(), user.ID)
 
 	export := map[string]interface{}{
 		"exported_at": time.Now(),
@@ -89,8 +83,7 @@ func ExportMyData(w http.ResponseWriter, r *http.Request) {
 func DeleteMyAccount(w http.ResponseWriter, r *http.Request) {
 	user, _ := lmodel.UserFromContext(r.Context())
 
-	// TODO: Hapus akun dan seluruh data terkait secara permanen (Right to be Forgotten)
-	if err := lmodel.DeleteUserAccount(user.ID); err != nil {
+	if err := db.DeleteUserAccount(r.Context(), user.ID); err != nil {
 		http.Error(w, "Failed to delete account", http.StatusInternalServerError)
 		return
 	}
